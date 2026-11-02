@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Painel Executivo de Logística</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3E%3Crect x=%272%27 y=%278%27 width=%273%27 height=%276%27 rx=%271%27 fill=%27%232a78d6%27/%3E%3Crect x=%276.5%27 y=%275%27 width=%273%27 height=%279%27 rx=%271%27 fill=%27%232a78d6%27/%3E%3Crect x=%2711%27 y=%272%27 width=%273%27 height=%2712%27 rx=%271%27 fill=%27%232a78d6%27/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+  <script>
+    // aplica o tema salvo antes do primeiro paint (sem flash)
+    try { const t = localStorage.getItem("tema"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  </script>
+</head>
+<body>
+<div class="viz-root">
+  <header class="topo">
+    <div>
+      <p class="eyebrow">Logística · Visão executiva</p>
+      <h1>Painel Executivo de Logística</h1>
+    </div>
+    <div class="topo-meta">
+      <span id="meta-dados" class="muted"></span>
+      <button id="btn-tema" class="btn-ghost" type="button" aria-label="Alternar tema claro/escuro">
+        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5a6.5 6.5 0 1 0 0 13z" fill="currentColor"/><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+        <span>Tema</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Filtros: uma linha, acima de tudo o que escopam -->
+  <nav class="filtros" aria-label="Filtros do painel">
+    <div class="seg-control" role="radiogroup" aria-label="Período" id="f-periodo"></div>
+    <label class="campo">
+      <span>Região</span>
+      <select id="f-regiao"><option value="todas">Todas</option></select>
+    </label>
+    <label class="campo">
+      <span>Segmento</span>
+      <select id="f-segmento"><option value="todos">Todos</option></select>
+    </label>
+    <p class="filtro-contexto" id="contexto-periodo" aria-live="polite"></p>
+  </nav>
+
+  <main id="conteudo" aria-busy="true">
+    <div id="erro" class="erro" hidden></div>
+
+    <!-- KPIs -->
+    <section class="grid" aria-label="Indicadores principais">
+      <article class="card hero span-4" id="hero"></article>
+      <div class="kpis span-8" id="kpis"></div>
+    </section>
+
+    <!-- Insights -->
+    <section aria-labelledby="t-insights">
+      <div class="secao-titulo">
+        <h2 id="t-insights">O que os dados dizem</h2>
+        <p class="muted">Leituras geradas automaticamente a partir do recorte selecionado, por ordem de severidade.</p>
+      </div>
+      <div class="insights" id="insights"></div>
+    </section>
+
+    <!-- Tendência -->
+    <section class="grid" aria-label="Tendência">
+      <figure class="card chart-card span-6" data-chart="receita">
+        <figcaption>
+          <div><h3>Receita mensal</h3><p class="sub" data-sub></p></div>
+          <button class="btn-tabela" type="button" aria-pressed="false">Tabela</button>
+        </figcaption>
+        <div class="chart" data-plot></div><div class="tabela-view" data-table hidden></div>
+      </figure>
+      <figure class="card chart-card span-6" data-chart="otd">
+        <figcaption>
+          <div><h3>Entregas no prazo por mês</h3><p class="sub" data-sub></p></div>
+          <button class="btn-tabela" type="button" aria-pressed="false">Tabela</button>
+        </figcaption>
+        <div class="chart" data-plot></div><div class="tabela-view" data-table hidden></div>
+      </figure>
+    </section>
+
+    <!-- Parceiros e causas -->
+    <section class="grid" aria-label="Transportadoras e causas de atraso">
+      <figure class="card chart-card span-7" data-chart="sla">
+        <figcaption>
+          <div><h3>SLA contratado × entregue, por transportadora</h3><p class="sub" data-sub></p></div>
+          <button class="btn-tabela" type="button" aria-pressed="false">Tabela</button>
+        </figcaption>
+        <div class="legenda" data-legend></div>
+        <div class="chart" data-plot></div><div class="tabela-view" data-table hidden></div>
+      </figure>
+      <figure class="card chart-card span-5" data-chart="motivos">
+        <figcaption>
+          <div><h3>Motivos de atraso</h3><p class="sub" data-sub></p></div>
+          <button class="btn-tabela" type="button" aria-pressed="false">Tabela</button>
+        </figcaption>
+        <div class="chart" data-plot></div><div class="tabela-view" data-table hidden></div>
+      </figure>
+    </section>
+
+    <!-- Serviço e cliente -->
+    <section class="grid" aria-label="Nível de serviço e cliente">
+      <figure class="card chart-card span-4" data-chart="regioes">
+        <figcaption>
+          <div><h3>Entregas no prazo por região</h3><p class="sub" data-sub></p></div>
+          <button class="btn-tabela" type="button" aria-pressed="false">Tabela</button>
+        </figcaption>
+        <div class="chart" data-plot></div><div class="tabela-view" data-table hidden></div>
+      </figure>
+      <figure class="card chart-card span-4" data-chart="nota">
+        <figcaption>
+          <div><h3>Nota do cliente por dias de atraso</h3><p class="sub" data-sub></p></div>
+          <button class="btn-tabela" type="button" aria-pressed="false">Tabela</button>
+        </figcaption>
+        <div class="chart" data-plot></div><div class="tabela-view" data-table hidden></div>
+      </figure>
+      <figure class="card chart-card span-4" data-chart="segmentos">
+        <figcaption>
+          <div><h3>Receita por segmento</h3><p class="sub" data-sub></p></div>
+          <button class="btn-tabela" type="button" aria-pressed="false">Tabela</button>
+        </figcaption>
+        <div class="chart" data-plot></div><div class="tabela-view" data-table hidden></div>
+      </figure>
+    </section>
+
+    <!-- Operação -->
+    <section class="grid" aria-label="Operação">
+      <figure class="card chart-card span-4" data-chart="cds">
+        <figcaption>
+          <div><h3>Tempo de expedição por CD</h3><p class="sub" data-sub></p></div>
+          <button class="btn-tabela" type="button" aria-pressed="false">Tabela</button>
+        </figcaption>
+        <div class="chart" data-plot></div><div class="tabela-view" data-table hidden></div>
+      </figure>
+      <figure class="card span-8 scorecard">
+        <figcaption>
+          <div><h3>Scorecard de transportadoras</h3><p class="sub">Clique no cabeçalho para ordenar. Gap = OTD entregue − SLA contratado.</p></div>
+        </figcaption>
+        <div class="tabela-scroll" id="scorecard"></div>
+      </figure>
+    </section>
+
+    <footer class="rodape muted">
+      Fonte: Supabase · tabelas pedidos, entregas, clientes, transportadoras e centros_distribuicao.
+      OTD considera entregas finalizadas (entregues + devolvidas). Meses incompletos ficam fora das comparações.
+    </footer>
+  </main>
+</div>
+
+<div id="tooltip" class="tooltip" role="tooltip" hidden></div>
+
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>
